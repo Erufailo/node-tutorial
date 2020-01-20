@@ -1,5 +1,9 @@
+const Joi = require('@hapi/joi');
 const express = require('express');
 const app = express();
+const cors = require('cors')
+
+app.use(cors())
 
 app.use(express.json())
 
@@ -26,17 +30,55 @@ app.get('/api/courses/:id', (req, res) => {
 });
 
 app.post('/api/courses', (req, res) => {
-  const courses = {
+  const { error } = validateCourse(req.body);
+  if (error) {
+    return res.status(400).send(error.details[0].message);
+
+  }
+
+  const course = {
     id: courses.length + 1,
     name: req.body.name
   }
-courses.push(course);
-res.send(course);
+  courses.push(course);
+  res.send(course);
+});
+
+app.put('/api/courses/:id', (req, res) => {
+  const course = courses.find(course => +course.id === +req.params.id);
+  if (!course) {
+    return res.status(404).send('Course not found');
+  }
+
+  const { error } = validateCourse(req.body);
+  if (error) {
+    return res.status(400).send(error.details[0].message);
+  }
+
+  course.name = req.body.name;
+  return res.send(course);
+});
+
+app.delete('/api/courses/:id', (req, res) => {
+  const course = courses.find(course => +course.id === +req.params.id);
+  if (!course) {
+    return res.status(404).send('Course not found');
+  }
+
+  courses.splice(courses.indexOf(course), 1);
+
+  res.send(course);
 });
 
 // app.get('/api/courses/:year/:month', (req, res) => {
 //   res.send(req.query);
 // });
+function validateCourse(course) {
+  const schema = Joi.object({
+    name: Joi.string().min(3).required()
+  });
+  return schema.validate({ ...course });
+}
 
 const port = process.env.PORT || 3000;
 
