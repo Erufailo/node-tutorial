@@ -1,11 +1,27 @@
+const helmet = require('helmet');
+const morgan = require('morgan');
+
 const Joi = require('@hapi/joi');
 const express = require('express');
 const app = express();
-const cors = require('cors')
+const logger = require('./logger')
+const cors = require('cors');
 
-app.use(cors())
+app.use(cors());
 
-app.use(express.json())
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
+app.use(helmet);
+app.use(morgan('tiny'));
+
+
+app.use(logger);
+
+app.use((req, res, next) => {
+  console.log('Authenticating');
+  next();
+});
 
 const courses = [
   { id: 1, name: 'course 1' },
